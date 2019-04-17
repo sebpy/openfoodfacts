@@ -38,6 +38,7 @@ def categories_table(url):
 
 
 def products_table(url_category):
+    """ Get all products from categories and insert into database """
 
     url_json = str(''.join(url_category))
     get_data = get_data_api(url_json + ".json")
@@ -68,6 +69,7 @@ def products_table(url_category):
             #data.append((product_mane, product_brand, product_category))
 
             print(product_mane, product_brand, product_category)
+
 
 def main():
     dbc.DB_CONNECT.execute("select link_categories from product_categories")
