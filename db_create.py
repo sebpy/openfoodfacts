@@ -3,23 +3,18 @@
 
 """ Create database with the OpenFoodFacts API"""
 
-#Import modules
+# Import modules
 import json
-import MySQLdb
+import math
 import requests as rq
 
 import db_connect as dbc
 
 
-#Constants
+# Constants
 DB_FILE = 'db_off.sql'
 OFF_CAT = 'https://fr.openfoodfacts.org/categories.json'
-OFF_URL = 'https://world.openfoodfacts.org/country/france'
-
-DB = MySQLdb.connect(host=dbc.mysql['host'], user=dbc.mysql['user'], passwd=dbc.mysql['passwd'],
-                     use_unicode=True, charset='utf8')
-
-DB_CONNECT = DB.cursor()
+OFF_URL = 'https://fr.openfoodfacts.org'
 
 
 def get_data_api(url):
@@ -28,9 +23,58 @@ def get_data_api(url):
     return data.json()
 
 
+def categories_table(url):
+    """ Get category from json data of openfoodfacts and insert in table categories"""
+
+    get_data = get_data_api(url)
+    for data in get_data["tags"]:
+        if data["products"] > 150 and 'en:' in data['id']:
+
+            dbc.DB_CONNECT.execute("INSERT INTO product_categories values ('0', %s, %s)", (data["name"], data["url"]))
+            dbc.DB.commit()
+
+    print("Data add in table categories_product")
+    dbc.DB.close()
+
+
+def products_table(url_category):
+
+    url_json = str(''.join(url_category))
+    get_data = get_data_api(url_json + ".json")
+    nb_pages = int(math.ceil(get_data["count"] / get_data["page_size"]))
+
+    data = []
+
+    for page in range(0, nb_pages):
+        categories_pages = url_json + "/" + str(page+1) + ".json"
+        get_data_categories = get_data_api(categories_pages)
+
+        for product in get_data_categories["products"]:
+            try:
+                product_mane = product["product_name_fr"]
+            except KeyError:
+                pass
+
+            try:
+                product_brand = product["product_name_fr"]
+            except KeyError:
+                product_brand = "N/A"
+
+            try:
+                product_category = product["categories"]
+            except KeyError:
+                pass
+
+            #data.append((product_mane, product_brand, product_category))
+
+            print(product_mane, product_brand, product_category)
+
 def main():
-    view = get_data_api(OFF_CAT)
-    print(view)
+    dbc.DB_CONNECT.execute("select link_categories from product_categories")
+    categories_product = dbc.DB_CONNECT.fetchall()
+
+    for data in categories_product:
+        products_table(data)
 
 
 if __name__ == "__main__":
