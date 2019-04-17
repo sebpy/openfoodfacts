@@ -66,9 +66,29 @@ def products_table(url_category):
             except KeyError:
                 pass
 
+            try:
+                product_description = product["desc"]
+            except KeyError:
+                product_description = "N/A"
+
+            try:
+                product_nutriscore = product["nutrition_grade_fr"]
+            except KeyError:
+                product_nutriscore = "N/A"
+
+            try:
+                product_store = product["stores"]
+            except KeyError:
+                product_store = "N/A"
+
+            try:
+                product_link = product["url"]
+            except KeyError:
+                product_link = "N/A"
+
             #data.append((product_mane, product_brand, product_category))
 
-            print(product_mane, product_brand, product_category)
+            print(product_store)
 
 
 def main():
