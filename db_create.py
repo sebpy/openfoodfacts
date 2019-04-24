@@ -7,6 +7,10 @@
 import json
 import math
 import requests as rq
+from tqdm import tqdm
+import sys
+import re
+import MySQLdb
 
 import db_connect as dbc
 
@@ -15,6 +19,30 @@ import db_connect as dbc
 DB_FILE = 'db_off.sql'
 OFF_CAT = 'https://fr.openfoodfacts.org/categories.json'
 OFF_URL = 'https://fr.openfoodfacts.org'
+
+
+def exec_sql_file(sql_file):
+    """ Create database """
+
+    print("--- Creating database ---")
+    print("1. Executing SQL script file: '%s'" % (sql_file))
+    statement = ""
+
+    for line in open(sql_file):
+        if re.match(r'--', line):  # ignore sql comment lines
+            continue
+        if not re.search(r'[^-;]+;', line):  # keep appending lines that don't end in ';'
+            statement = statement + line
+        else:  # when you get a line ending in ';' then exec statement and reset for next statement
+            statement = statement + line
+            #print "\n\n[DEBUG] Executing SQL statement:\n%s" % (statement)
+            try:
+                dbc.DB_CONNECT.execute(statement)
+            except dbc.DB.Error as e:
+                print("\n[WARN] MySQLError during execute statement \n\tArgs: '%s'" % (str(e.args)))
+
+            statement = ""
+    print("\n   [Info] Database Create")
 
 
 def get_data_api(url):
@@ -28,23 +56,20 @@ def categories_table(url):
 
     get_data = get_data_api(url)
     for data in get_data["tags"]:
-        if data["products"] > 150 and 'en:' in data['id']:
 
+        if 55 <= data["products"] <= 60 and 'en:' in data['id']:
             dbc.DB_CONNECT.execute("INSERT INTO product_categories values ('0', %s, %s)", (data["name"], data["url"]))
             dbc.DB.commit()
 
-    print("Data add in table categories_product")
-    dbc.DB.close()
+    print("   [Info] Data add in table categories_product")
 
 
-def products_table(url_category):
+def products_table(id_categories, url_categories):
     """ Get all products from categories and insert into database """
 
-    url_json = str(''.join(url_category))
+    url_json = str(''.join(url_categories))
     get_data = get_data_api(url_json + ".json")
     nb_pages = int(math.ceil(get_data["count"] / get_data["page_size"]))
-
-    data = []
 
     for page in range(0, nb_pages):
         categories_pages = url_json + "/" + str(page+1) + ".json"
@@ -54,25 +79,31 @@ def products_table(url_category):
             try:
                 product_mane = product["product_name_fr"]
             except KeyError:
-                pass
-
+                product_mane = "delete"
             try:
-                product_brand = product["product_name_fr"]
+                product_brand = product["brands"]
             except KeyError:
                 product_brand = "N/A"
 
             try:
-                product_category = product["categories"]
-            except KeyError:
-                pass
-
-            try:
-                product_description = product["desc"]
+                product_description = str(product["ingredients_text_fr"])
             except KeyError:
                 product_description = "N/A"
 
             try:
-                product_nutriscore = product["nutrition_grade_fr"]
+                if product["nutrition_grade_fr"] == 'a':
+                    product_nutriscore = "0"
+                elif product["nutrition_grade_fr"] == 'b':
+                    product_nutriscore = "1"
+                elif product["nutrition_grade_fr"] == 'c':
+                    product_nutriscore = "2"
+                elif product["nutrition_grade_fr"] == 'd':
+                    product_nutriscore = "3"
+                elif product["nutrition_grade_fr"] == 'e':
+                    product_nutriscore = "4"
+                else:
+                    product_nutriscore = "N/A"
+
             except KeyError:
                 product_nutriscore = "N/A"
 
@@ -86,17 +117,37 @@ def products_table(url_category):
             except KeyError:
                 product_link = "N/A"
 
-            #data.append((product_mane, product_brand, product_category))
+            try:
+                dbc.DB_CONNECT.execute("INSERT INTO products values ('0', %s, %s, %s, %s, %s, %s, %s, '0')",
+                                     (product_mane, product_brand, id_categories, product_description,
+                                      product_nutriscore, product_store, product_link))
+                dbc.DB.commit()
 
-            print(product_store)
+            except dbc.DB.Error as e:
+                print("Error %d: %s" % (e.args[0], e.args[1]))
+                sys.exit(1)
 
 
 def main():
-    dbc.DB_CONNECT.execute("select link_categories from product_categories")
+    exec_sql_file(DB_FILE)
+    categories_table(OFF_CAT)
+
+    dbc.DB_CONNECT.execute("select id_categories, link_categories from product_categories")
     categories_product = dbc.DB_CONNECT.fetchall()
 
+    print("\n 2. Add data in table products_table")
+    print("   Please wait...")
+
+    pbar = tqdm(total=1180, ncols=100)
+
     for data in categories_product:
-        products_table(data)
+        id_cate = data[0]
+        link_cate = data[1]
+        products_table(id_cate, link_cate)
+        pbar.update(20)
+    pbar.close()
+    dbc.DB.close()
+    print("   [Info] Dump data is ok!")
 
 
 if __name__ == "__main__":

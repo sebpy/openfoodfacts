@@ -2,3 +2,4 @@ MySQLdb
 pylint
 mysqlclient
 requests
+tqdm

@@ -25,10 +25,13 @@ CREATE TABLE products (
     name_product VARCHAR(250) NOT NULL,
     brand_product VARCHAR(250) DEFAULT NULL,
     category_product smallint(6) UNSIGNED NOT NULL,
-    description_product VARCHAR(500) DEFAULT NULL,
-    nutriscore_product VARCHAR(1) DEFAULT NULL,
+    description_product TEXT DEFAULT NULL,
+    nutriscore_product VARCHAR(3) DEFAULT NULL,
     store_product VARCHAR(200) DEFAULT NULL,
     link_product VARCHAR(400) DEFAULT NULL,
     save_product enum('0','1') DEFAULT '0',
     PRIMARY KEY(id_product)
 )ENGINE=InnoDB;
+
+ALTER TABLE products CONVERT TO CHARACTER SET utf8;
+--- Mise en place des clé etrangeres à réaliser

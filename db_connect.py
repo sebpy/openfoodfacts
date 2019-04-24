@@ -14,5 +14,5 @@ mysql = {
 
 DB = MySQLdb.connect(host=mysql['host'], user=mysql['user'], passwd=mysql['passwd'],
                      db=mysql['db'], use_unicode=True, charset='utf8')
-
 DB_CONNECT = DB.cursor()
+
