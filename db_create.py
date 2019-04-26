@@ -10,7 +10,6 @@ import requests as rq
 from tqdm import tqdm
 import sys
 import re
-import MySQLdb
 
 import db_connect as dbc
 
@@ -138,7 +137,7 @@ def main():
     print("\n 2. Add data in table products_table")
     print("   Please wait...")
 
-    pbar = tqdm(total=1180, ncols=100)
+    pbar = tqdm(total=1160, ncols=100)
 
     for data in categories_product:
         id_cate = data[0]

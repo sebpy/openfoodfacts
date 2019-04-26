@@ -9,7 +9,7 @@ pip install -r requierments.txt
 Create database on system:
 1. connect to mysql cli with mysql -u [user] -p
 2. Enter your password
-3. DROP DATABASE IF EXISTS `openfoodfacts`;
+3. Execute: CREATE DATABASE `openfoodfacts`;
 
 Add data in database:
 1. Modify db_connect.py with your database informations
