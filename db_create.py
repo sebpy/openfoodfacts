@@ -56,7 +56,7 @@ def categories_table(url):
     get_data = get_data_api(url)
     for data in get_data["tags"]:
 
-        if 55 <= data["products"] <= 60 and 'en:' in data['id']:
+        if data["products"] in range(55, 60) and 'en:' in data['id']:
             dbc.DB_CONNECT.execute("INSERT INTO product_categories values ('0', %s, %s)", (data["name"], data["url"]))
             dbc.DB.commit()
 
@@ -75,10 +75,12 @@ def products_table(id_categories, url_categories):
         get_data_categories = get_data_api(categories_pages)
 
         for product in get_data_categories["products"]:
+
             try:
                 product_mane = product["product_name_fr"]
             except KeyError:
-                product_mane = "delete"
+                product_mane = "N/A"
+
             try:
                 product_brand = product["brands"]
             except KeyError:
@@ -101,13 +103,16 @@ def products_table(id_categories, url_categories):
                 elif product["nutrition_grade_fr"] == 'e':
                     product_nutriscore = "4"
                 else:
-                    product_nutriscore = "N/A"
+                    product_nutriscore = "4"
 
             except KeyError:
-                product_nutriscore = "N/A"
+                product_nutriscore = "e"
 
             try:
-                product_store = product["stores"]
+                if not product["stores"]:
+                    product_store = "N/A"
+                else:
+                    product_store = product["stores"]
             except KeyError:
                 product_store = "N/A"
 
@@ -118,8 +123,21 @@ def products_table(id_categories, url_categories):
 
             try:
                 dbc.DB_CONNECT.execute("INSERT INTO products values ('0', %s, %s, %s, %s, %s, %s, %s, '0')",
-                                     (product_mane, product_brand, id_categories, product_description,
-                                      product_nutriscore, product_store, product_link))
+                                      (product_mane, product_brand, id_categories, product_description,
+                                       product_nutriscore, product_store, product_link))
+                dbc.DB.commit()
+
+            except dbc.DB.Error as e:
+                print("Error %d: %s" % (e.args[0], e.args[1]))
+                sys.exit(1)
+
+            # Clean db
+            try:
+                # DELETE duplicate name and no name entry
+                dbc.DB_CONNECT.execute("DELETE FROM `products` WHERE name_product='N/A'")
+                dbc.DB_CONNECT.execute("DELETE FROM `products` WHERE id_product NOT IN "
+                                       "(SELECT id_product FROM (SELECT max(id_product) id_product "
+                                       "FROM products GROUP BY name_product) as doublon);")
                 dbc.DB.commit()
 
             except dbc.DB.Error as e:
@@ -137,7 +155,7 @@ def main():
     print("\n 2. Add data in table products_table")
     print("   Please wait...")
 
-    pbar = tqdm(total=1160, ncols=100)
+    pbar = tqdm(total=1140, ncols=100)
 
     for data in categories_product:
         id_cate = data[0]
