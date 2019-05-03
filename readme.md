@@ -14,3 +14,9 @@ Create database on system:
 Add data in database:
 1. Modify db_connect.py with your database informations
 2. Execute db_create.py
+
+## How to use:
+1. Execute openfoodfacts.py
+2. Read instructions on screen
+
+Enjoy
