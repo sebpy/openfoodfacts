@@ -13,17 +13,16 @@ def show_categories():
     dbc.DB_CONNECT.execute("select * from product_categories")
     cate = dbc.DB_CONNECT.fetchall()
 
-    print("N° |  Categories names\n________________________\n")
+    print("\nN° |  Categories names\n________________________\n")
     for data in cate:
         print(data[0], "  ", data[1])
 
     while True:
-        print("\nN°  |  Categories")
         print("---------------------------------")
-        cate_nb = input("N° :")
+        cate_nb = input("\nN° :")
 
         try:
-            cate_id = str(cate_nb)
+            cate_id = int(cate_nb)
             read_products_liste(cate_id)
 
         except ValueError:
@@ -42,9 +41,8 @@ def read_products_liste(id_cate):
         print(products[0], "  ", products[1])
 
     while True:
-        print("\nN°  |  Products")
         print("---------------------------------")
-        cate_nb = input("N° :")
+        cate_nb = int(input("\nN° :"))
 
         try:
             product_id = str(cate_nb)
@@ -117,7 +115,7 @@ def read_product(id_product):
 
     if save_product == "0":
         print("------------------------------")
-        save = input("Do you want save this product ? (Y/N) ")
+        save = input("\nDo you want save this product ? (Y/N) \n")
         if save.upper() == "Y":
             dbc.DB_CONNECT.execute("UPDATE products SET save_product='1' "
                                    "WHERE id_product='%s'" % id_product)
@@ -148,9 +146,9 @@ N°  | Names  """)
             for datas in product_saved:
                 print(datas[0], ".", datas[1])
 
-            liste_save = input("\nN° :")
+            liste_save = int(input("\nN° :"))
 
-            if liste_save > "0":
+            if liste_save > 0:
                 read_product(liste_save)
 
         except ValueError:
@@ -174,16 +172,16 @@ def menu():
 MENU:
 ---------------------------------
 1. View categories\n2. View products saved\n3. Quit """)
-        menu_start = input("N° :")
+        menu_start = input("\nN° :")
 
         try:
-            menu_int = str(menu_start)
-            if menu_int == "1":
+            menu_int = int(menu_start)
+            if menu_int == 1:
                 show_categories()
 
-            elif menu_int == "2":
+            elif menu_int == 2:
                 print(view_products_saved())
-            elif menu_int == "3":
+            elif menu_int == 3:
                 break
             else:
                 clear_console()
