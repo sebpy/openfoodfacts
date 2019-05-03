@@ -4,12 +4,11 @@
 """ Create database with the OpenFoodFacts API"""
 
 # Import modules
-import json
-import math
-import requests as rq
-from tqdm import tqdm
 import sys
 import re
+import math
+from tqdm import tqdm
+import requests as rq
 
 import db_connect as dbc
 
@@ -37,8 +36,9 @@ def exec_sql_file(sql_file):
             #print "\n\n[DEBUG] Executing SQL statement:\n%s" % (statement)
             try:
                 dbc.DB_CONNECT.execute(statement)
-            except dbc.DB.Error as e:
-                print("\n[WARN] MySQLError during execute statement \n\tArgs: '%s'" % (str(e.args)))
+            except dbc.DB.Error as err:
+                print("\n[WARN] MySQLError during execute statement "
+                      "\n\tArgs: '%s'" % (str(err.args)))
 
             statement = ""
     print("\n   [Info] Database Create")
@@ -57,7 +57,8 @@ def categories_table(url):
     for data in get_data["tags"]:
 
         if data["products"] in range(55, 60) and 'en:' in data['id']:
-            dbc.DB_CONNECT.execute("INSERT INTO product_categories values ('0', %s, %s)", (data["name"], data["url"]))
+            dbc.DB_CONNECT.execute("INSERT INTO product_categories "
+                                   "values ('0', %s, %s)", (data["name"], data["url"]))
             dbc.DB.commit()
 
     print("   [Info] Data add in table categories_product")
@@ -122,13 +123,16 @@ def products_table(id_categories, url_categories):
                 product_link = "N/A"
 
             try:
-                dbc.DB_CONNECT.execute("INSERT INTO products values ('0', %s, %s, %s, %s, %s, %s, %s, '0')",
-                                      (product_mane, product_brand, id_categories, product_description,
-                                       product_nutriscore, product_store, product_link))
+                dbc.DB_CONNECT.execute("INSERT INTO products "
+                                       "values ('0', %s, %s, %s, %s, %s, %s, %s, "
+                                       "'0')",
+                                       (product_mane, product_brand, id_categories,
+                                        product_description, product_nutriscore,
+                                        product_store, product_link))
                 dbc.DB.commit()
 
-            except dbc.DB.Error as e:
-                print("Error %d: %s" % (e.args[0], e.args[1]))
+            except dbc.DB.Error as err:
+                print("Error %s: %s" % (err.args[0], err.args[1]))
                 sys.exit(1)
 
             # Clean db
@@ -140,12 +144,13 @@ def products_table(id_categories, url_categories):
                                        "FROM products GROUP BY name_product) as doublon);")
                 dbc.DB.commit()
 
-            except dbc.DB.Error as e:
-                print("Error %d: %s" % (e.args[0], e.args[1]))
+            except dbc.DB.Error as err:
+                print("Error %s: %s" % (err.args[0], err.args[1]))
                 sys.exit(1)
 
 
 def main():
+    """ Function main """
     exec_sql_file(DB_FILE)
     categories_table(OFF_CAT)
 
@@ -169,4 +174,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
