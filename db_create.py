@@ -5,15 +5,15 @@
 
 # Import modules
 import sys
-import re
 import math
 from tqdm import tqdm
 import requests as rq
+import re
 
 import db_connect as dbc
 
 
-class database:
+class Database:
     """ Class for create database """
 
     def __init__(self):
@@ -25,17 +25,16 @@ class database:
         """ Create database """
 
         print("--- Creating database ---")
-        print("1. Executing SQL script file: '%s'" % (sql_file))
+        print("1. Executing SQL script file: '%s'" % sql_file)
         statement = ""
 
         for line in open(sql_file):
-            if re.match(r'--', line):  # ignore sql comment lines
+            if re.match(r'--', line):
                 continue
-            if not re.search(r'[^-;]+;', line):  # keep appending lines that don't end in ';'
+            if not re.search(r'[^-;]+;', line):
                 statement = statement + line
-            else:  # when you get a line ending in ';' then exec statement and reset for next statement
+            else:
                 statement = statement + line
-                #print "\n\n[DEBUG] Executing SQL statement:\n%s" % (statement)
                 try:
                     dbc.DB_CONNECT.execute(statement)
                 except dbc.DB.Error as err:
@@ -92,7 +91,7 @@ class database:
                     product_description = "N/A"
 
                 try:
-                    if product["nutrition_grade_fr"] == 'a':
+                    if product["nutrition_grade_fr"] == ["a,b,c,d,e"]:
                         product_nutriscore = "0"
                     elif product["nutrition_grade_fr"] == 'b':
                         product_nutriscore = "1"
@@ -168,8 +167,9 @@ class database:
             pbar.update(20)
         pbar.close()
         dbc.DB.close()
-        print("   [Info] Dump data is ok!")
+        print("\n   [Info] Dump data is ok!")
 
 
 if __name__ == "__main__":
-    database.main()
+    db = Database()
+    db.main()
