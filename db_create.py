@@ -6,9 +6,9 @@
 # Import modules
 import sys
 import math
+import re
 from tqdm import tqdm
 import requests as rq
-import re
 
 import db_connect as dbc
 
@@ -20,8 +20,15 @@ class Database:
         self.db_file = 'db_off.sql'
         self.off_cat = 'https://fr.openfoodfacts.org/categories.json'
         self.off_url = 'https://fr.openfoodfacts.org'
+        self.nutriscore = {0: 'A',
+                           1: 'B',
+                           2: 'C',
+                           3: 'D',
+                           4: 'E'
+                           }
 
-    def exec_sql_file(self, sql_file):
+    @staticmethod
+    def exec_sql_file(sql_file):
         """ Create database """
 
         print("--- Creating database ---")
@@ -44,8 +51,10 @@ class Database:
                 statement = ""
         print("\n   [Info] Database Create")
 
-    def get_data_api(self, url):
+    @staticmethod
+    def get_data_api(url):
         """" Get all data from api OpenFoodFacts """
+
         data = rq.get(url)
         return data.json()
 
@@ -91,21 +100,12 @@ class Database:
                     product_description = "N/A"
 
                 try:
-                    if product["nutrition_grade_fr"] == ["a,b,c,d,e"]:
-                        product_nutriscore = "0"
-                    elif product["nutrition_grade_fr"] == 'b':
-                        product_nutriscore = "1"
-                    elif product["nutrition_grade_fr"] == 'c':
-                        product_nutriscore = "2"
-                    elif product["nutrition_grade_fr"] == 'd':
-                        product_nutriscore = "3"
-                    elif product["nutrition_grade_fr"] == 'e':
-                        product_nutriscore = "4"
-                    else:
-                        product_nutriscore = "4"
+                    nutr_grade = product["nutrition_grade_fr"]
+                    product_nutriscore = list(self.nutriscore.keys())[
+                        list(self.nutriscore.values()).index(nutr_grade.upper())]
 
                 except KeyError:
-                    product_nutriscore = "e"
+                    product_nutriscore = "4"
 
                 try:
                     if not product["stores"]:
@@ -138,8 +138,9 @@ class Database:
                     # DELETE duplicate name and no name entry
                     dbc.DB_CONNECT.execute("DELETE FROM `products` WHERE name_product='N/A'")
                     dbc.DB_CONNECT.execute("DELETE FROM `products` WHERE id_product NOT IN "
-                                           "(SELECT id_product FROM (SELECT max(id_product) id_product "
-                                           "FROM products GROUP BY name_product) as doublon);")
+                                           "(SELECT id_product FROM (SELECT max(id_product)"
+                                           " id_product FROM products "
+                                           "GROUP BY name_product) as doublon);")
                     dbc.DB.commit()
 
                 except dbc.DB.Error as err:
@@ -171,5 +172,5 @@ class Database:
 
 
 if __name__ == "__main__":
-    db = Database()
-    db.main()
+    DB = Database()
+    DB.main()

@@ -64,9 +64,10 @@ class Openfoodfacts:
         dbc.DB_CONNECT.execute("select name_categories from product_categories "
                                "where id_categories='%s'" % product_detail[3])
         category_name = dbc.DB_CONNECT.fetchone()
-        dbc.DB_CONNECT.execute("select name_product, link_product, nutriscore_product "
-                               "from products where nutriscore_product <= '%s' "
-                               "ORDER BY nutriscore_product ASC LIMIT 5" % product_detail[5])
+        dbc.DB_CONNECT.execute("""select name_product, link_product, nutriscore_product
+                               from products where id_categories = %s AND nutriscore_product <= '%s'
+                               ORDER BY nutriscore_product ASC LIMIT 5""",
+                               (product_detail[5], product_detail[3]))
         substitue = dbc.DB_CONNECT.fetchall()
 
         id_product = product_detail[0]
@@ -138,7 +139,8 @@ N°  | Names  """)
             except ValueError:
                 pass
 
-    def clear_console(self):
+    @staticmethod
+    def clear_console():
         """ Clears command line interface """
 
         if platform.system() == "Windows":
@@ -194,5 +196,5 @@ MENU:
 
 
 if __name__ == '__main__':
-    start = Openfoodfacts()
-    start.main()
+    START = Openfoodfacts()
+    START.main()
