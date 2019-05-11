@@ -11,7 +11,9 @@ class Openfoodfacts:
     """ Class openfoodfacts """
 
     def __init__(self):
-        pass
+        self.index_cat = []
+        self.index = []
+        self.id_save = []
 
     def show_categories(self):
         """ Read data from categories_product """
@@ -20,19 +22,21 @@ class Openfoodfacts:
         cate = dbc.DB_CONNECT.fetchall()
 
         print("\nN° |  Categories names\n________________________\n")
-        for data in cate:
-            print(data[0], "  ", data[1])
+        for id_cat, data in enumerate(cate, start=1):
+            self.index_cat.append(data[0])
+            print(str(id_cat)+". "+str(data[1]))
 
         while True:
             print("---------------------------------")
-            cate_nb = input("\nN° :")
+            cate_nb = int(input("\nPlease enter number of categorie: "))
 
             try:
-                cate_id = int(cate_nb)
-                self.read_products_liste(cate_id)
+                if cate_nb <= len(self.index_cat):
+                    cate_id = str(self.index_cat[(cate_nb-1)])
+                    self.read_products_liste(int(cate_id))
 
             except ValueError:
-                pass
+                print("This number of categories does not exist")
 
     def read_products_liste(self, id_cate):
         """ Read data from products from id categories and search """
@@ -42,32 +46,40 @@ class Openfoodfacts:
         products_list = dbc.DB_CONNECT.fetchall()
 
         print("N° |  Products names\n________________________\n")
-        for products in products_list:
-            print(products[0], "  ", products[1])
+
+        for id_prod, products in enumerate(products_list, start=1):
+            self.index.append(products[0])
+            print(str(id_prod)+". "+str(products[1]))
 
         while True:
             print("---------------------------------")
-            cate_nb = int(input("\nN° :"))
+            index_prod = int(input("\nPlease enter number of product: "))
 
             try:
-                product_id = str(cate_nb)
-                self.read_product(product_id)
+                if index_prod <= len(self.index):
+                    product_id = str(self.index[(index_prod-1)])
+                    self.read_product(product_id)
 
             except ValueError:
-                pass
+                print("This number of categories does not exist")
 
     def read_product(self, id_product):
         """ Read data from products from id categories and search """
 
-        dbc.DB_CONNECT.execute("select * from products where id_product= '%s'" % id_product)
+        dbc.DB_CONNECT.execute("select * from products "
+                               "where id_product= %s " % id_product)
         product_detail = dbc.DB_CONNECT.fetchone()
+        id_cate = product_detail[3]
+
         dbc.DB_CONNECT.execute("select name_categories from product_categories "
-                               "where id_categories='%s'" % product_detail[3])
+                               "where id_categories='%s'" % id_cate)
         category_name = dbc.DB_CONNECT.fetchone()
+
         dbc.DB_CONNECT.execute("""select name_product, link_product, nutriscore_product
-                               from products where id_categories = %s AND nutriscore_product <= '%s'
+                               from products where id_categories = '%s' AND nutriscore_product <= '%s'
                                ORDER BY nutriscore_product ASC LIMIT 5""",
-                               (product_detail[5], product_detail[3]))
+                               (id_cate, int(product_detail[5])))
+
         substitue = dbc.DB_CONNECT.fetchall()
 
         id_product = product_detail[0]
@@ -128,13 +140,16 @@ class Openfoodfacts:
             print("""
 N°  | Names  """)
             try:
-                for datas in product_saved:
-                    print(datas[0], ".", datas[1])
+                for id_save, datas in enumerate(product_saved, start=1):
+                    self.id_save.append(datas[0])
+                    print(str(id_save)+". "+str(datas[1]))
 
-                liste_save = int(input("\nN° :"))
+                liste_save = int(input("\nPlease enter number of product: "))
 
                 if liste_save > 0:
-                    self.read_product(liste_save)
+                    if liste_save <= len(self.id_save):
+                        product_id = str(self.id_save[(liste_save-1)])
+                        self.read_product(product_id)
 
             except ValueError:
                 pass
@@ -173,7 +188,7 @@ MENU:
             else:
                 print("0. Quit")
 
-            menu_start = input("\nN° :")
+            menu_start = input("\nPlease enter number of menu: ")
 
             try:
                 menu_int = int(menu_start)
@@ -188,7 +203,7 @@ MENU:
                 else:
                     self.clear_console()
             except ValueError:
-                pass
+                print("This number of menu does not exist")
 
     def main(self):
         """ Main function """

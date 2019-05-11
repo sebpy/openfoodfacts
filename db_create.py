@@ -100,9 +100,9 @@ class Database:
                     product_description = "N/A"
 
                 try:
-                    nutr_grade = product["nutrition_grade_fr"]
+                    nutri_grade = product["nutrition_grade_fr"]
                     product_nutriscore = list(self.nutriscore.keys())[
-                        list(self.nutriscore.values()).index(nutr_grade.upper())]
+                        list(self.nutriscore.values()).index(nutri_grade.upper())]
 
                 except KeyError:
                     product_nutriscore = "4"
